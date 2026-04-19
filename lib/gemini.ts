@@ -1,7 +1,9 @@
 import { chat } from './opencode';
 import type { ScreenTimeData } from './types';
 
-const MODEL = 'gemini-3-flash';
+// OpenCode's Gemini route is flaking with OVERLOADED_CREDENTIALS on Google's side.
+// Claude Haiku 4.5 is multimodal, cheap, and works reliably through the same endpoint.
+const MODEL = process.env.OPENCODE_MODEL || 'claude-haiku-4-5';
 
 const VISION_PROMPT = `
 You are given up to 4 screenshots from iOS Screen Time (weekly view) or the
