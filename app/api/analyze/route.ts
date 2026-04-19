@@ -1,18 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeScreenshot } from '@/lib/gemini';
+import { analyzeScreenshots } from '@/lib/gemini';
 
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData();
-    const file = form.get('image');
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: 'no image' }, { status: 400 });
+    const files = form.getAll('images').filter((v): v is File => v instanceof File);
+
+    if (files.length < 1) {
+      return NextResponse.json({ error: 'at least one image required' }, { status: 400 });
     }
-    const buf = Buffer.from(await file.arrayBuffer());
-    const data = await analyzeScreenshot(buf.toString('base64'), file.type || 'image/png');
+    if (files.length > 4) {
+      return NextResponse.json({ error: 'max 4 images' }, { status: 400 });
+    }
+
+    const images = await Promise.all(
+      files.map(async (f) => ({
+        base64: Buffer.from(await f.arrayBuffer()).toString('base64'),
+        mimeType: f.type || 'image/png',
+      })),
+    );
+
+    const data = await analyzeScreenshots(images);
     return NextResponse.json(data);
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'analyze failed' }, { status: 500 });
