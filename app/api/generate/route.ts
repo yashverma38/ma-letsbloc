@@ -12,11 +12,15 @@ export const maxDuration = 60;
 
 type Body = ScreenTimeData & { lang?: string };
 
-async function translateWithRetry(baseScript: string, targetLabel: string): Promise<string> {
+async function translateWithRetry(
+  baseScript: string,
+  targetLabel: string,
+  extraProtected: string[] = [],
+): Promise<string> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const candidate = await translateScript(baseScript, targetLabel);
-      const { ok, missing } = validateTranslation(baseScript, candidate);
+      const candidate = await translateScript(baseScript, targetLabel, extraProtected);
+      const { ok, missing } = validateTranslation(baseScript, candidate, extraProtected);
       if (ok) return candidate;
       console.warn(`translation attempt ${attempt + 1} dropped tokens:`, missing);
     } catch (e) {
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'bad input' }, { status: 400 });
     }
 
-    const name = (body.name || 'beta').trim().split(/\s+/)[0];
+    const name = (body.name?.trim() || 'bachha').split(/\s+/)[0];
     const tier = pickTier(body);
     const archetype = pickArchetype(body);
     const lang = findLang(body.lang || '');
@@ -44,7 +48,7 @@ export async function POST(req: NextRequest) {
     let script = baseScript;
 
     if (lang.translateTo) {
-      script = await translateWithRetry(baseScript, lang.translateTo);
+      script = await translateWithRetry(baseScript, lang.translateTo, [name]);
     }
 
     const audioBuf = await synthesize(script, lang.code, archetype);

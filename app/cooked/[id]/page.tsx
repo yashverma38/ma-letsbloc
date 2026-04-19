@@ -20,7 +20,7 @@ export default async function Result({ params }: { params: { id: string } }) {
 
   const archetype = data.archetype as Archetype;
   const screen = data.data as ScreenTimeData;
-  const sig = signatureLine(archetype, { ...screen, name: screen.name || 'beta' });
+  const sig = signatureLine(archetype, { ...screen, name: screen.name?.trim() || 'bachha' });
   const label = ARCHETYPE_LABEL[archetype];
 
   return (

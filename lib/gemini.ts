@@ -98,8 +98,14 @@ export async function analyzeScreenshot(imageBase64: string, mimeType: string) {
 
 import { extractProtectedTokens } from './scripts';
 
-export async function translateScript(script: string, targetLangLabel: string): Promise<string> {
-  const mustKeep = extractProtectedTokens(script);
+export async function translateScript(
+  script: string,
+  targetLangLabel: string,
+  extraProtected: string[] = [],
+): Promise<string> {
+  const mustKeep = Array.from(
+    new Set([...extractProtectedTokens(script), ...extraProtected.filter(Boolean)]),
+  );
   const tokenList = mustKeep.length ? mustKeep.join('  |  ') : '(none)';
 
   const prompt = `Translate the following voice-note script into ${targetLangLabel}.
@@ -128,8 +134,11 @@ ${script}`;
 export function validateTranslation(
   original: string,
   translated: string,
+  extraProtected: string[] = [],
 ): { ok: boolean; missing: string[] } {
-  const origTokens = extractProtectedTokens(original);
+  const origTokens = Array.from(
+    new Set([...extractProtectedTokens(original), ...extraProtected.filter(Boolean)]),
+  );
   const lower = translated.toLowerCase();
   const missing = origTokens.filter((t) => !lower.includes(t.toLowerCase()));
   // tolerate at most one drifted token
