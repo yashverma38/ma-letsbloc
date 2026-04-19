@@ -78,5 +78,5 @@ export function extractProtectedTokens(script: string): string[] {
   for (const m of script.match(/\b\d{1,2}:\d{2}\s*[AP]M\b/gi) || []) tokens.add(m);
   for (const m of script.match(/\b\d+h\s*\d*m?\b/gi) || []) tokens.add(m);
   for (const n of PROTECTED_NAMES) if (script.includes(n)) tokens.add(n);
-  return [...tokens];
+  return Array.from(tokens);
 }
