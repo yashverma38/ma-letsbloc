@@ -55,7 +55,7 @@ export default function Landing() {
     }
   }
 
-  const shareMsg = "Maa is calling. She's seen your screen time. 📞 ma.letsbloc.com";
+  const shareMsg = "Got a voice note from Maa. She's seen my screen time. ma.letsbloc.com";
   const shareUrl = 'https://ma.letsbloc.com';
 
   return (
@@ -71,50 +71,59 @@ export default function Landing() {
         </div>
 
         {!done ? (
-          <div className="flex-1 flex flex-col items-center justify-between py-10 text-center">
-            <div className="text-[13px] text-white/50 tracking-[0.04em] mb-5 fade-in">incoming call</div>
+          <div className="flex-1 flex flex-col items-center justify-between py-8 text-center">
+            <div className="text-[13px] text-white/50 tracking-[0.04em] mb-5 fade-in">voice note from</div>
 
             <div className="flex flex-col items-center">
               <div className="avatar mb-4">मा</div>
               <div className="text-[30px] font-semibold tracking-tight">Maa</div>
-              <div className="text-[13px] text-white/45 mt-1">mobile · favourites</div>
+              <div className="text-[13px] text-white/45 mt-1">90 seconds · in your language</div>
             </div>
 
-            <p className="text-[14px] text-white/70 leading-[1.5] max-w-[260px] mt-6">
+            <p className="text-[14px] text-white/70 leading-[1.5] max-w-[260px] mt-5">
               She&apos;s seen your screen time.
               <br />
-              <strong className="text-white font-semibold">Pick up before she calls your friends.</strong>
+              <strong className="text-white font-semibold">Hear what she has to say.</strong>
             </p>
 
-            <form onSubmit={submit} className="w-full flex flex-col gap-2.5 px-1 mt-6" noValidate>
+            <Link href="/cooked" className="btn-primary w-full mt-6 inline-flex items-center justify-center">
+              🎧 Get your voice note
+            </Link>
+
+            <form
+              onSubmit={submit}
+              className="w-full flex flex-col gap-2 px-1 mt-6 pt-5 border-t border-white/10"
+              noValidate
+            >
+              <div className="text-[11px] uppercase tracking-[0.08em] text-white/40">
+                or keep me posted
+              </div>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="field"
-                placeholder="your email (don't lie)"
+                placeholder="your email"
                 autoComplete="email"
                 required
               />
-              <button type="submit" disabled={loading} className="btn-primary">
-                {loading ? 'Connecting to Maa...' : "📞 Answer Maa's call"}
+              <button type="submit" disabled={loading} className="btn-ghost">
+                {loading ? 'Adding you…' : 'Notify me of new voices'}
               </button>
               <div className="text-[12px] text-center min-h-[16px] text-[#ff7a6b]">{error}</div>
-              <div className="text-center mt-1">
-                <Link href="/cooked" className="text-[12px] text-white/50 hover:text-white/80">
-                  or get your voice note now →
-                </Link>
-              </div>
             </form>
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-2 fade-in">
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#ffb347] to-[#c85028] flex items-center justify-center text-[26px] mb-5">✓</div>
-            <h3 className="text-[20px] font-semibold mb-2">Maa will call you first.</h3>
+            <h3 className="text-[20px] font-semibold mb-2">You&apos;re on the list.</h3>
             <p className="text-[13px] text-white/55 leading-[1.5] max-w-[240px] mb-5">
-              You&apos;re on the list. She&apos;ll ring when the line opens. Tell a friend who needs it more.
+              We&apos;ll ping you when Maa adds new voices. Meanwhile, she&apos;s ready now.
             </p>
-            <div className="flex gap-2 justify-center flex-wrap">
+            <Link href="/cooked" className="btn-primary max-w-[260px]">
+              🎧 Get your voice note
+            </Link>
+            <div className="flex gap-2 justify-center flex-wrap mt-5">
               <a
                 className="btn-ghost"
                 href={`https://wa.me/?text=${encodeURIComponent(shareMsg)}`}
@@ -141,12 +150,9 @@ export default function Landing() {
                   } catch {}
                 }}
               >
-                🔗 Copy
+                🔗 Copy link
               </button>
             </div>
-            <Link href="/cooked" className="mt-6 text-[12px] text-white/60 hover:text-white/90 underline underline-offset-4">
-              Skip waiting — get your voice note now
-            </Link>
           </div>
         )}
       </div>

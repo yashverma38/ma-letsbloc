@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pickArchetype, pickTier } from '@/lib/archetype';
 import { buildScript, signatureLine } from '@/lib/scripts';
 import { synthesize } from '@/lib/sarvam';
-import { translateScript } from '@/lib/gemini';
+import { translateScript, validateTranslation } from '@/lib/gemini';
 import { findLang } from '@/lib/languages';
 import { serverClient, AUDIO_BUCKET } from '@/lib/supabase';
 import type { ScreenTimeData } from '@/lib/types';
@@ -11,6 +11,21 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 type Body = ScreenTimeData & { lang?: string };
+
+async function translateWithRetry(baseScript: string, targetLabel: string): Promise<string> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const candidate = await translateScript(baseScript, targetLabel);
+      const { ok, missing } = validateTranslation(baseScript, candidate);
+      if (ok) return candidate;
+      console.warn(`translation attempt ${attempt + 1} dropped tokens:`, missing);
+    } catch (e) {
+      console.warn(`translation attempt ${attempt + 1} errored:`, (e as Error).message);
+    }
+  }
+  console.warn('falling back to Hinglish after failed translation attempts');
+  return baseScript;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,13 +40,11 @@ export async function POST(req: NextRequest) {
     const lang = findLang(body.lang || '');
     const slots = { ...body, name };
 
-    let script = buildScript(archetype, slots);
+    const baseScript = buildScript(archetype, slots);
+    let script = baseScript;
+
     if (lang.translateTo) {
-      try {
-        script = await translateScript(script, lang.translateTo);
-      } catch (e) {
-        console.warn('translation failed, falling back to Hinglish:', (e as Error).message);
-      }
+      script = await translateWithRetry(baseScript, lang.translateTo);
     }
 
     const audioBuf = await synthesize(script, lang.code, archetype);

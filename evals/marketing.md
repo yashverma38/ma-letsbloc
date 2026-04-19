@@ -25,6 +25,24 @@ The output MUST contain at least one of these lines, filled with real data:
 - [ ] V3. At least one line includes a specific number (hours, pickups, notifications) — vague lines don't share.
 - [ ] V4. The forward-to-WhatsApp mechanic pre-fills a message that sounds like a friend, not a brand.
 
+## Data-point coverage contract
+
+Every filled script (any tier, any language) must reference at least 6 of the
+following, with the literal value preserved across translation:
+
+- `{TOTAL_HOURS}` — weekly total
+- `{TOP_APP}` + `{TOP_APP_HOURS}`
+- `{SECOND_APP}` + `{SECOND_APP_HOURS}`
+- `{PICKUPS}` — daily average
+- `{FIRST_PICKUP}` — e.g. 7:45 AM
+- `{NOTIFICATIONS}` — daily notifications
+- `{LATE_NIGHT_APP}` — most-used after 11 PM
+- `{LONGEST_SESSION}` — e.g. "2h 15m"
+- `{WEEK_PCT}` — rage tier only; % change vs last week
+
+If a translated script drops more than one of these literal values,
+`/api/generate` retries once then falls back to the Hinglish original.
+
 ## Cultural safety
 
 - [ ] C1. No body-shaming.

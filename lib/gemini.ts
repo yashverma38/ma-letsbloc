@@ -94,25 +94,42 @@ export async function analyzeScreenshot(imageBase64: string, mimeType: string) {
   return analyzeScreenshots([{ base64: imageBase64, mimeType }]);
 }
 
+import { extractProtectedTokens } from './scripts';
+
 export async function translateScript(script: string, targetLangLabel: string): Promise<string> {
+  const mustKeep = extractProtectedTokens(script);
+  const tokenList = mustKeep.length ? mustKeep.join('  |  ') : '(none)';
+
   const prompt = `Translate the following voice-note script into ${targetLangLabel}.
-It is dialogue spoken by a warm, slightly guilt-tripping Indian mother to her child.
+It is dialogue spoken by a warm, guilt-tripping Indian mother to her child.
 
-Rules:
-- Keep the tone: warm, teasing, emotionally specific. Not formal.
-- Preserve ALL numbers, app names, and specific times exactly as given.
-- Preserve pauses ("...") and the natural rhythm of speech.
-- Do not add or remove beats. Same structure.
-- Write in Roman (Latin) script — do not use Devanagari or other native scripts.
-- Return ONLY the translated script, no explanation.
+HARD RULES (a violation means the output is invalid):
+1. PRESERVE these exact strings verbatim, unchanged, in the output:
+   ${tokenList}
+2. Every sentence / beat from the original MUST appear in the translation — no additions, no omissions, no reordering.
+3. Keep pauses and ellipses ("...") exactly as they appear.
+4. Tone stays casual, spoken, motherly, emotionally specific — never formal.
+5. Write in ROMAN (LATIN) script only. Do NOT use Devanagari, Tamil, Bengali, or any native script.
+6. Return ONLY the translated script text. No labels, no quotes, no commentary.
 
-Original:
+Script to translate:
 ${script}`;
 
   return (await chat({
     model: MODEL,
-    temperature: 0.3,
-    maxTokens: 900,
+    temperature: 0.25,
+    maxTokens: 1200,
     messages: [{ role: 'user', content: prompt }],
   })).trim();
+}
+
+export function validateTranslation(
+  original: string,
+  translated: string,
+): { ok: boolean; missing: string[] } {
+  const origTokens = extractProtectedTokens(original);
+  const lower = translated.toLowerCase();
+  const missing = origTokens.filter((t) => !lower.includes(t.toLowerCase()));
+  // tolerate at most one drifted token
+  return { ok: missing.length <= 1, missing };
 }
