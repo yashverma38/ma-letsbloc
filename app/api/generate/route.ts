@@ -193,9 +193,10 @@ export async function POST(req: NextRequest) {
     // Non-blocking; errors are swallowed inside incrMetric.
     Promise.all(metricKeys.map(([k, v]) => incrMetric(k, v))).catch(() => {});
 
-    // Ensure the archive promise can't be GC'd before the route returns
-    // (Next.js edge/node handlers will keep microtasks alive).
-    void archivePromise;
+    // Vercel serverless freezes the function once the response is sent, so
+    // fire-and-forget promises get truncated. Await before returning — costs
+    // ~1s of wall time, guarantees every synth is archived.
+    await archivePromise;
 
     return NextResponse.json({
       id,
