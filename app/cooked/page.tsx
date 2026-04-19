@@ -104,6 +104,12 @@ export default function Upload() {
           <div className="text-[12px] text-center min-h-[16px] text-[#ff7a6b]">{err}</div>
         </div>
 
+        <div className="text-center mt-6">
+          <Link href="/cooked/manual" className="text-[12px] text-white/50 hover:text-white/80 underline underline-offset-4">
+            no screenshot? tell Maa yourself →
+          </Link>
+        </div>
+
         <p className="text-[11px] text-white/40 text-center mt-8 max-w-sm mx-auto leading-[1.5]">
           All voices are AI-generated. No real mothers were used in the making of this product.
           Your screen time is processed in-browser and deleted within 24 hours. No account required.

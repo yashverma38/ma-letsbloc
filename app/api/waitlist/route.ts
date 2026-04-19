@@ -9,6 +9,12 @@ export async function POST(req: NextRequest) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'invalid email' }, { status: 400 });
     }
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE) {
+      console.log('[waitlist:unconfigured]', { email, source });
+      return NextResponse.json({ ok: true, queued: 'console' });
+    }
+
     const supabase = serverClient();
     const { error } = await supabase
       .from('waitlist')
