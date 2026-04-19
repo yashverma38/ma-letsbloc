@@ -1,63 +1,94 @@
 # ma.letsbloc.com
 
-Waitlist landing page for **Maa is calling** — an AI-generated WhatsApp voice note from Maa, built to roast your screen time.
+**Maa is calling.** An AI voice note from Maa, built to roast your screen time.
 
-The page is a single `index.html` file designed as a fake iPhone lockscreen with an incoming call from "Maa." Visitors "answer" by entering their email.
+Upload a Screen Time / Digital Wellbeing screenshot → Gemini reads it → an archetype is chosen → ElevenLabs speaks Maa's voice note → share to WhatsApp.
 
 ## Stack
 
-- Plain HTML, CSS, vanilla JS — no build step, no framework
-- Google Fonts (Inter, Noto Sans Devanagari)
-- Form submissions via [Formspree](https://formspree.io)
-- Static hosting (Vercel / Netlify / Cloudflare Pages / any static host)
+- **Next.js 14** (app router, TypeScript)
+- **Tailwind CSS**
+- **Google Gemini 2.5 Flash** (Vision OCR)
+- **ElevenLabs multilingual v2** (Hindi / Hinglish TTS)
+- **Supabase** (Postgres + Storage)
+- **Vercel** (hosting)
 
 ## Run locally
 
 ```bash
-# just open it
-open index.html
+# 1. install
+npm install
 
-# or serve it
-npx serve .
+# 2. env
+cp .env.example .env.local
+# fill in GEMINI_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID,
+# NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE
+
+# 3. supabase setup (one time)
+#   - create a project
+#   - open SQL editor, paste supabase/schema.sql, run it
+#   - Storage → new bucket named "maa-audio" → public read
+#   - paste the project URL + service role key into .env.local
+
+# 4. dev
+npm run dev
+# open http://localhost:3000
 ```
 
 ## Deploy
-
-### 1. Create a Formspree form
-Sign up at [formspree.io](https://formspree.io), create a form, copy its endpoint URL (e.g. `https://formspree.io/f/xxxxxxx`).
-
-### 2. Wire the endpoint
-In `index.html`, find:
-
-```js
-const FORMSPREE_URL = "%%FORMSPREE_URL%%";
-```
-
-Replace the placeholder with your Formspree URL.
-
-### 3. Ship it
-Any static host works. Example with Vercel:
 
 ```bash
 npx vercel --prod
 ```
 
-Then point your domain at the deployed URL via your host's dashboard.
+Set the same env vars in Vercel Settings → Environment Variables. Add `ma.letsbloc.com` under Domains.
+
+## Routes
+
+| Path | Purpose |
+|---|---|
+| `/` | Landing page + waitlist |
+| `/cooked` | Upload Screen Time screenshot |
+| `/cooked/[id]` | Play voice note + share |
+| `/api/waitlist` | POST `{ email }` → `waitlist` |
+| `/api/analyze` | POST `image` (multipart) → Gemini JSON |
+| `/api/generate` | POST JSON → ElevenLabs audio + DB row |
 
 ## Structure
 
 ```
-.
-├── index.html    # entire site (markup + styles + script inline)
-├── LICENSE
-└── README.md
+app/
+├── page.tsx                  # landing (waitlist)
+├── cooked/
+│   ├── page.tsx              # upload
+│   └── [id]/page.tsx         # result
+├── api/
+│   ├── waitlist/route.ts
+│   ├── analyze/route.ts
+│   └── generate/route.ts
+└── layout.tsx · globals.css · not-found.tsx
+components/
+└── ResultClient.tsx
+lib/
+├── types.ts · archetype.ts · scripts.ts
+├── gemini.ts · elevenlabs.ts · supabase.ts
+supabase/
+└── schema.sql
 ```
+
+## Archetype selection
+
+Simple rule-based (see `lib/archetype.ts`):
+
+- `dadi` — ≥ 8 hrs/day average
+- `rage` — ≥ 6 hrs/day, or ≥ 120 pickups/day
+- `sweet` — everything else (default)
 
 ## Notes
 
-- If `FORMSPREE_URL` is left as the placeholder, the form still shows a success state for local preview — emails are only logged to console, not captured.
-- Waitlist counter is currently a static base + local increments. Swap to a real count when a backend exists.
-- Mobile-first: the phone-frame visual is the whole point; it reads as a 3D iPhone on desktop and full-frame on mobile.
+- Voices are AI-generated. Always disclose this.
+- Never clone a real person's voice without explicit consent.
+- Screenshot processing should not persist the raw image — only the extracted numeric data is stored.
 
 ## License
 
