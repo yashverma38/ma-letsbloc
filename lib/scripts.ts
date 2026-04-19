@@ -20,11 +20,11 @@ function fill(template: string, slots: Slots): string {
 }
 
 const TEMPLATES: Record<Archetype, string> = {
+  proud: `Arre {NAME}... kya hua beta? Tabiyat theek hai? Maine tumhari screen time dekhi — sirf {TOTAL_HOURS} ghante is hafte. Itna kam? Kuch ho toh nahi gaya? {TOP_APP} pe bas {TOP_APP_HOURS} ghante. Padosi ki Maa ne pucha, "aapka beta theek hai na" — maine kaha "shaayad padh raha hai, shaayad office". Par ek baat sun lo — itne kam pe rukna mat. Phone band rakhna acchi baat hai, par Maa ko bhi call kar liya karo. Mausi ne pucha tha pichhle hafte. Shaam ko time milta hai toh ek minute ke liye chai pe aa jana. Khaana kha liya aaj? Proud hoon tujhpe. Par call kar liya karo. Bas itna chahiye.`,
+
   sweet: `Hello {NAME}... kaise ho beta? Maine socha call kar loon, subah se tumhari yaad aa rahi thi. Dekho, maine tumhari screen time dekhi — {TOTAL_HOURS} ghante is hafte. {TOP_APP} pe {TOP_APP_HOURS} ghante akele. {SECOND_APP} pe aur {SECOND_APP_HOURS} ghante. Subah {FIRST_PICKUP} baje sabse pehle phone uthaya — chai tak nahi banayi hogi. Padosi ki beti ne kal LinkedIn pe post daali — naya kaam lag gaya. Tumne kya post kiya? Story? Koi baat nahi. Roz {NOTIFICATIONS} notifications aati hain tumhare phone pe — tumhara phone tumse zyada busy hai. Raat ko {LATE_NIGHT_APP} band kar ke so jaya karo. Aankhen kharab ho rahi hain. Tumhari nahi, meri, tumhe socho-soch ke. Chalo rakhti hoon, khana thanda ho raha hai. Call kar lena kabhi. Tum theek raho, bas itna chahiye.`,
 
-  rage: `Arre {NAME}! Yeh kya chal raha hai? {TOTAL_HOURS} ghante ek hafte mein? {WEEK_PCT} percent zyada pichhle hafte se! Maine chashma khoja teen din phone ke piche — aur tum {TOP_APP} pe {TOP_APP_HOURS} ghante bitaate ho? {PICKUPS} baar phone uthaaya ek din mein — mujhe {PICKUPS} baar bhi call nahi kiya mahine bhar mein. Subah {FIRST_PICKUP} baje se phone chalu — namaste, pooja, naashta, kuch nahi — seedha phone. Kal Sharma uncle ka call aaya — unka beta Google mein gaya. Maine kya jawab doon? Mera bachha? Reels mein. {NOTIFICATIONS} notifications rozana — tumhara phone bol raha hai, tum nahi. Tumhare papa ne aaj do baar poocha. Main kya jawab doon? Phone rakho. Abhi. Khana lag gaya hai.`,
-
-  dadi: `Aao beta, paas baitho. Humare zamane mein ek TV tha — woh bhi ek ghanta chalta tha. Aur tum... kya kehte hain... rill? Reel? {TOP_APP_HOURS} ghante {TOP_APP} pe. Ek hafte mein {TOTAL_HOURS} ghante — yeh toh poora din beth-beth ke kat jaata hai. Subah {FIRST_PICKUP} baje uthte hi phone — Bhagwan ka naam leti hoon pehle main. Sabse lambi session {LONGEST_SESSION} — aankhen toh bachpan mein hi kharab karvaa lega. Raat ko {LATE_NIGHT_APP} pe jaagte ho — pet garm ho jayega, aankhon ke niche kaale daag aa jayenge. Chalo, tulsi pe pani daalo. Hanuman Chalisa sun lo ek baar. Phone mein dhyan mat lagao, pooja mein lagao. Jeete raho. Par phone kam karo, nahi toh dant padegi.`,
+  rage: `Arre {NAME}! Yeh kya chal raha hai? {TOTAL_HOURS} ghante ek hafte mein? {WEEK_PCT} percent zyada pichhle hafte se! Maine chashma khoja teen din phone ke piche — aur tum {TOP_APP} pe {TOP_APP_HOURS} ghante bitaate ho? {PICKUPS} baar phone uthaaya ek din mein — mujhe {PICKUPS} baar bhi call nahi kiya mahine bhar mein. Subah {FIRST_PICKUP} baje se phone chalu — namaste, pooja, naashta, kuch nahi — seedha phone. Kal Sharma uncle ka call aaya — unka beta Google mein gaya. Maine kya jawab doon? Mera bachha? Reels mein. {NOTIFICATIONS} notifications rozana — tumhara phone bol raha hai, tum nahi. Tumhare papa ne aaj do baar poocha. Main kya jawab doon? Phone rakho. Abhi. Khaana lag gaya hai.`,
 };
 
 export function buildScript(archetype: Archetype, slots: Slots): string {
@@ -33,9 +33,9 @@ export function buildScript(archetype: Archetype, slots: Slots): string {
 
 export function signatureLine(archetype: Archetype, slots: Slots): string {
   const lines: Record<Archetype, string> = {
+    proud: `Proud hoon tujhpe. Par call kar liya karo. Bas itna chahiye.`,
     sweet: `Chalo rakhti hoon. Khana kha lena. Call kar lena kabhi.`,
     rage: `${slots.pickups} baar phone uthaya. Mujhe ${slots.pickups} baar bhi call nahi kiya mahine bhar mein.`,
-    dadi: `Phone mein dhyan mat lagao, pooja mein lagao.`,
   };
   return lines[archetype];
 }

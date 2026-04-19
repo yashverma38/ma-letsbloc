@@ -1,5 +1,4 @@
 export type ScreenTimeData = {
-  // From Week Overview
   totalHours: number;
   topApp: string;
   topAppHours: number;
@@ -8,28 +7,33 @@ export type ScreenTimeData = {
   socialHours?: number;
   weekOverPreviousPct?: number;
 
-  // From Pickups tab
   pickups: number;
   firstPickupTime?: string;
   longestSession?: string;
 
-  // From Notifications tab
   notificationsPerDay?: number;
   topNotificationApp?: string;
 
-  // Derived / late-night
   lateNightApp: string;
-
-  // User-supplied
   name?: string;
 };
 
-export type Archetype = 'sweet' | 'rage' | 'dadi';
+export type Archetype = 'proud' | 'sweet' | 'rage';
+
+export type Tier = 'low' | 'medium' | 'high';
+
+export const ARCHETYPE_OF: Record<Tier, Archetype> = {
+  low: 'proud',
+  medium: 'sweet',
+  high: 'rage',
+};
 
 export type VoiceNote = {
   id: string;
   archetype: Archetype;
+  tier: Tier;
   data: ScreenTimeData;
   audioUrl: string;
+  lang: string;
   createdAt: string;
 };

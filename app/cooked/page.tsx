@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { LANG_OPTIONS } from '@/lib/languages';
 
 type Slot = 'overview' | 'mostUsed' | 'pickups' | 'notifications';
 
@@ -44,6 +45,7 @@ export default function Upload() {
     notifications: null,
   });
   const [name, setName] = useState('');
+  const [langKey, setLangKey] = useState(`${LANG_OPTIONS[0].code}|${LANG_OPTIONS[0].label}`);
   const [step, setStep] = useState<'idle' | 'analyzing' | 'generating' | 'error'>('idle');
   const [err, setErr] = useState('');
 
@@ -76,7 +78,7 @@ export default function Upload() {
       const r2 = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, name: name.trim() || undefined }),
+        body: JSON.stringify({ ...data, name: name.trim() || undefined, lang: langKey }),
       });
       if (!r2.ok) throw new Error((await r2.json()).error || 'generate failed');
       const { id } = await r2.json();
@@ -165,6 +167,21 @@ export default function Upload() {
             onChange={(e) => setName(e.target.value)}
             maxLength={30}
           />
+
+          <label className="block">
+            <div className="text-[12px] text-white/60 mb-1.5">Which language should Maa call in?</div>
+            <select
+              className="field"
+              value={langKey}
+              onChange={(e) => setLangKey(e.target.value)}
+            >
+              {LANG_OPTIONS.map((opt) => (
+                <option key={`${opt.code}|${opt.label}`} value={`${opt.code}|${opt.label}`}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <button
             onClick={go}

@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { LANG_OPTIONS } from '@/lib/languages';
 
 const COMMON_APPS = ['Instagram', 'YouTube', 'WhatsApp', 'Reels', 'TikTok', 'Snapchat', 'X', 'Reddit', 'Chrome'];
 
 export default function Manual() {
   const router = useRouter();
   const [name, setName] = useState('');
+  const [langKey, setLangKey] = useState(`${LANG_OPTIONS[0].code}|${LANG_OPTIONS[0].label}`);
   const [totalHours, setTotalHours] = useState(35);
   const [topApp, setTopApp] = useState('Instagram');
   const [topAppHours, setTopAppHours] = useState(18);
@@ -31,6 +33,7 @@ export default function Manual() {
           pickups: Number(pickups),
           lateNightApp,
           name: name.trim() || undefined,
+          lang: langKey,
         }),
       });
       if (!r.ok) throw new Error((await r.json()).error || 'generate failed');
@@ -63,6 +66,21 @@ export default function Manual() {
             onChange={(e) => setName(e.target.value)}
             maxLength={30}
           />
+
+          <label className="block">
+            <div className="text-[12px] text-white/60 mb-1.5">Which language should Maa call in?</div>
+            <select
+              className="field"
+              value={langKey}
+              onChange={(e) => setLangKey(e.target.value)}
+            >
+              {LANG_OPTIONS.map((opt) => (
+                <option key={`${opt.code}|${opt.label}`} value={`${opt.code}|${opt.label}`}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="block">
             <div className="text-[12px] text-white/60 mb-1.5">weekly screen time: <strong className="text-white">{totalHours}h</strong></div>
