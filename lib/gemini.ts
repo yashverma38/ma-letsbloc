@@ -1,45 +1,54 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateText } from 'ai';
+import { opencode } from 'ai-sdk-provider-opencode-sdk';
 import type { ScreenTimeData } from './types';
 
 const VISION_PROMPT = `
-You are given a screenshot of iOS Screen Time or Android Digital Wellbeing.
-Return ONLY valid JSON in this exact shape (no markdown, no prose):
+You are given a screenshot of a WEEKLY screen time report.
+
+The user is uploading their 7-day screen time summary from one of:
+- iOS: Settings → Screen Time → See All Activity → "Week" tab
+- Android: Settings → Digital Wellbeing → Dashboard (weekly view)
+
+Extract these WEEKLY AGGREGATES and return ONLY valid JSON:
 {
-  "totalHours": number,
-  "topApp": string,
-  "topAppHours": number,
-  "pickups": number,
-  "lateNightApp": string
+  "totalHours": number,        // TOTAL screen time across all 7 days, in hours
+  "topApp": string,             // single most-used app across the whole week
+  "topAppHours": number,        // hours on topApp across the whole week
+  "pickups": number,            // AVERAGE pickups per day over the week
+  "lateNightApp": string        // app most-used after 11pm, or topApp if unclear
 }
+
 Rules:
-- totalHours: weekly total in hours. If only daily shown, multiply by 7.
-- topApp: name of the single most-used app.
-- topAppHours: hours on topApp for the week (daily × 7 if needed).
-- pickups: pickups per day. If only total shown, divide by 7.
-- lateNightApp: most-used app after 11pm if visible, else same as topApp.
-If any field is unclear, make a reasonable integer estimate. Never output null.
+- If only daily averages are visible, MULTIPLY by 7 to get weekly totals for totalHours and topAppHours.
+- If pickups are shown as a weekly total, DIVIDE by 7 to get the daily average.
+- If the screenshot is a daily view (not weekly), multiply visible daily values by 7 to estimate weekly totals.
+- Return ONLY valid JSON. No markdown, no code fences, no prose.
+- Never return null. Always estimate reasonable integers when unclear.
 `.trim();
 
 export async function analyzeScreenshot(
   imageBase64: string,
   mimeType: string,
 ): Promise<ScreenTimeData> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error('GEMINI_API_KEY not set');
+  const dataUrl = `data:${mimeType};base64,${imageBase64}`;
 
-  const genAI = new GoogleGenerativeAI(key);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const { text } = await generateText({
+    model: opencode('google/gemini-2.5-flash'),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: VISION_PROMPT },
+          { type: 'image', image: dataUrl },
+        ],
+      },
+    ],
+  });
 
-  const result = await model.generateContent([
-    { inlineData: { data: imageBase64, mimeType } },
-    { text: VISION_PROMPT },
-  ]);
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('Model did not return JSON');
 
-  const text = result.response.text().trim();
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Gemini did not return JSON');
-
-  const parsed = JSON.parse(jsonMatch[0]);
+  const parsed = JSON.parse(match[0]);
   return {
     totalHours: Number(parsed.totalHours) || 0,
     topApp: String(parsed.topApp || 'Instagram'),

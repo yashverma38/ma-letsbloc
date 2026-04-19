@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function Landing() {
   const [clock, setClock] = useState('9:41');
@@ -36,12 +38,13 @@ export default function Landing() {
     }
     setLoading(true);
     try {
-      const res = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), source: 'landing' }),
+      await addDoc(collection(db, 'waitlist_ma'), {
+        email: email.trim().toLowerCase(),
+        source: 'landing',
+        createdAt: serverTimestamp(),
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        referrer: typeof document !== 'undefined' ? document.referrer : '',
       });
-      if (!res.ok) throw new Error();
       const cur = Number(localStorage.getItem('ma_count_boost') || 0);
       localStorage.setItem('ma_count_boost', String(cur + 1));
       setDone(true);

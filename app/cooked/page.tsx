@@ -55,11 +55,16 @@ export default function Upload() {
       </div>
 
       <div className="w-full max-w-md fade-in">
-        <h1 className="text-[26px] font-semibold text-center mb-2">Drop your Screen Time.</h1>
-        <p className="text-[14px] text-white/60 text-center leading-[1.5] mb-8 max-w-sm mx-auto">
-          Settings → Screen Time → screenshot (iOS).<br />
-          Settings → Digital Wellbeing → screenshot (Android).
+        <h1 className="text-[26px] font-semibold text-center mb-2">Drop your week.</h1>
+        <p className="text-[14px] text-white/60 text-center leading-[1.5] mb-6 max-w-sm mx-auto">
+          Upload your <strong className="text-white">weekly</strong> screen time — 7 days, not today.
+          Daily views give Maa only half the story.
         </p>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 mb-6 max-w-sm mx-auto text-[12px] text-white/60 leading-[1.6]">
+          <div className="text-white/80 font-medium mb-1.5">How to grab the week view:</div>
+          <div><strong className="text-white/80">iOS:</strong> Settings → Screen Time → See All Activity → tap <em>Week</em> → screenshot</div>
+          <div className="mt-1"><strong className="text-white/80">Android:</strong> Settings → Digital Wellbeing → Dashboard → weekly bar chart → screenshot</div>
+        </div>
 
         <div className="flex flex-col gap-3">
           <label className="relative cursor-pointer">
@@ -76,8 +81,8 @@ export default function Upload() {
               ) : (
                 <>
                   <div className="text-3xl">📱</div>
-                  <div className="text-sm text-white/70">Tap to upload screenshot</div>
-                  <div className="text-[11px] text-white/40">PNG / JPG · processed in-browser, deleted in 24hr</div>
+                  <div className="text-sm text-white/70">Tap to upload weekly screenshot</div>
+                  <div className="text-[11px] text-white/40">7-day view · PNG / JPG · deleted in 24hr</div>
                 </>
               )}
             </div>

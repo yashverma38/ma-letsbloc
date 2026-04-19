@@ -1,12 +1,7 @@
 -- Run once in Supabase SQL editor.
 -- Re-run is safe (idempotent).
 
-create table if not exists waitlist (
-  id uuid primary key default gen_random_uuid(),
-  email text unique not null,
-  source text,
-  created_at timestamptz default now()
-);
+-- Waitlist moved to Firestore (project: bloc-the-app, collection: waitlist_ma).
 
 create table if not exists voice_notes (
   id uuid primary key default gen_random_uuid(),
