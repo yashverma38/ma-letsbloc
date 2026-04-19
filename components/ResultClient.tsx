@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { Archetype, ScreenTimeData } from '@/lib/types';
+import { EVENTS, setProfile, track } from '@/lib/mixpanel';
 
 const FORWARDS = [
   'Bhai, Maa ne abhi call kiya. Tujhe bhi karegi. → ma.letsbloc.com',
@@ -32,6 +34,28 @@ export default function ResultClient({
   const [copied, setCopied] = useState(false);
   const [igBusy, setIgBusy] = useState(false);
   const forward = FORWARDS[Math.floor(Math.random() * FORWARDS.length)];
+  const searchParams = useSearchParams();
+  const isFresh = searchParams?.get('fresh') === '1';
+
+  useEffect(() => {
+    if (!isFresh) return;
+    track(EVENTS.VOICE_NOTE_GENERATED, {
+      generation_id: id,
+      archetype,
+      totalHours: data.totalHours,
+      topApp: data.topApp,
+      topAppHours: data.topAppHours,
+      pickups: data.pickups,
+      lateNightApp: data.lateNightApp,
+    });
+    setProfile({
+      last_archetype: archetype,
+      last_total_hours: data.totalHours,
+      last_top_app: data.topApp,
+      last_pickups: data.pickups,
+      last_generated_at: new Date().toISOString(),
+    });
+  }, [isFresh, id, archetype, data]);
 
   useEffect(() => {
     const a = audioRef.current;
@@ -265,7 +289,7 @@ export default function ResultClient({
         </div>
 
         <Link
-          href="https://letsbloc.com"
+          href={`/aware/${id}`}
           className="mt-10 text-[13px] text-white/60 hover:text-white underline underline-offset-4"
         >
           Ready to uncook? Join the Bloc →

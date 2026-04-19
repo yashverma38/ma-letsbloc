@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LANG_OPTIONS } from '@/lib/languages';
+import { EVENTS, identifyByEmail, track } from '@/lib/mixpanel';
 
 const COMMON_APPS = ['Instagram', 'YouTube', 'WhatsApp', 'Reels', 'TikTok', 'Snapchat', 'X', 'Reddit', 'Chrome'];
 
 export default function Manual() {
   const router = useRouter();
   const [name, setName] = useState('');
+  const [emailField, setEmailField] = useState('');
   const [langKey, setLangKey] = useState(`${LANG_OPTIONS[0].code}|${LANG_OPTIONS[0].label}`);
   const [totalHours, setTotalHours] = useState(35);
   const [topApp, setTopApp] = useState('Instagram');
@@ -21,7 +23,22 @@ export default function Manual() {
 
   async function go() {
     setErr('');
+    const cleanEmail = emailField.trim().toLowerCase();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErr('That email looks off — Maa needs a real one, or leave blank.');
+      return;
+    }
     setLoading(true);
+
+    if (cleanEmail) {
+      identifyByEmail(cleanEmail, {
+        source: 'cooked_manual',
+        name: name.trim() || undefined,
+        preferred_language: langKey,
+      });
+    }
+    track(EVENTS.SCREENSHOT_UPLOADED, { mode: 'manual', totalHours: Number(totalHours) });
+
     try {
       const r = await fetch('/api/generate', {
         method: 'POST',
@@ -34,11 +51,12 @@ export default function Manual() {
           lateNightApp,
           name: name.trim() || undefined,
           lang: langKey,
+          email: cleanEmail || undefined,
         }),
       });
       if (!r.ok) throw new Error((await r.json()).error || 'generate failed');
       const { id } = await r.json();
-      router.push(`/cooked/${id}`);
+      router.push(`/cooked/${id}?fresh=1`);
     } catch (e: any) {
       setErr(e.message || 'Something went wrong.');
       setLoading(false);
@@ -65,6 +83,15 @@ export default function Manual() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={30}
+          />
+
+          <input
+            type="email"
+            className="field"
+            placeholder="email (optional — we'll send you the link)"
+            value={emailField}
+            onChange={(e) => setEmailField(e.target.value)}
+            autoComplete="email"
           />
 
           <label className="block">

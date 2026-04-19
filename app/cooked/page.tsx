@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LANG_OPTIONS } from '@/lib/languages';
+import { EVENTS, identifyByEmail, track } from '@/lib/mixpanel';
 
 type Slot = 'overview' | 'mostUsed' | 'pickups' | 'notifications';
 
@@ -45,13 +46,22 @@ export default function Upload() {
     notifications: null,
   });
   const [name, setName] = useState('');
+  const [emailField, setEmailField] = useState('');
   const [langKey, setLangKey] = useState(`${LANG_OPTIONS[0].code}|${LANG_OPTIONS[0].label}`);
   const [step, setStep] = useState<'idle' | 'analyzing' | 'generating' | 'error'>('idle');
   const [err, setErr] = useState('');
 
   function pick(slot: Slot, f: File | null) {
+    const isFirstForThisSlot = !files[slot];
     setFiles((prev) => ({ ...prev, [slot]: f }));
     setPreviews((prev) => ({ ...prev, [slot]: f ? URL.createObjectURL(f) : null }));
+    if (f && isFirstForThisSlot) {
+      track(EVENTS.SCREENSHOT_UPLOADED, {
+        slot,
+        fileSizeKb: Math.round(f.size / 1024),
+        mimeType: f.type,
+      });
+    }
   }
 
   const uploaded = Object.values(files).filter(Boolean).length;
@@ -62,8 +72,22 @@ export default function Upload() {
       setErr('Upload at least the Week Overview screenshot.');
       return;
     }
+    const cleanEmail = emailField.trim().toLowerCase();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErr('That email looks off — Maa needs a real one, or leave blank.');
+      return;
+    }
     setErr('');
     setStep('analyzing');
+
+    if (cleanEmail) {
+      identifyByEmail(cleanEmail, {
+        source: 'cooked_upload',
+        name: name.trim() || undefined,
+        preferred_language: langKey,
+      });
+    }
+
     try {
       const form = new FormData();
       for (const slot of SLOTS) {
@@ -78,12 +102,17 @@ export default function Upload() {
       const r2 = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, name: name.trim() || undefined, lang: langKey }),
+        body: JSON.stringify({
+          ...data,
+          name: name.trim() || undefined,
+          lang: langKey,
+          email: cleanEmail || undefined,
+        }),
       });
       if (!r2.ok) throw new Error((await r2.json()).error || 'generate failed');
       const { id } = await r2.json();
 
-      router.push(`/cooked/${id}`);
+      router.push(`/cooked/${id}?fresh=1`);
     } catch (e: any) {
       setErr(e.message || 'Something went wrong.');
       setStep('error');
@@ -166,6 +195,15 @@ export default function Upload() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={30}
+          />
+
+          <input
+            type="email"
+            className="field"
+            placeholder="email (optional — we'll send you the link)"
+            value={emailField}
+            onChange={(e) => setEmailField(e.target.value)}
+            autoComplete="email"
           />
 
           <label className="block">

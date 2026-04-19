@@ -62,3 +62,65 @@ $$;
 
 -- Storage bucket for audio files (public read).
 -- Create in Supabase Dashboard → Storage → New bucket → name: maa-audio → public.
+
+-- ----------------------------------------------------------------------------
+-- Phase 1 — ElevenLabs integration + persistent audio archive (PRD §7, §10).
+-- Append-only. Not touched by the 24h cleanup cron. Keep forever.
+-- Storage counterpart: maa-audio-archive bucket (private, no TTL).
+
+create table if not exists voice_generations (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  vendor text not null,                       -- 'elevenlabs' | 'sarvam'
+  voice_id text not null,
+  model_id text not null,
+  archetype text not null,
+  lang_code text not null,
+  lang_label text not null,
+  voice_settings jsonb not null,
+  input_text text not null,
+  input_text_chars integer not null,
+  output_format text not null,
+  audio_storage_path text not null,
+  audio_byte_size integer not null,
+  audio_duration_ms integer,
+  synth_wall_ms integer not null,
+  upload_wall_ms integer not null,
+  voice_note_id uuid references voice_notes(id) on delete set null,
+  source text not null,                       -- 'generate' | 'sample' | 'eval' | 'regenerate'
+  request_id text,
+  user_session_id text,
+  ratings jsonb
+);
+
+create index if not exists voice_generations_created_idx on voice_generations (created_at desc);
+create index if not exists voice_generations_archetype_idx on voice_generations (archetype, created_at desc);
+create index if not exists voice_generations_vendor_idx on voice_generations (vendor, created_at desc);
+create index if not exists voice_generations_lang_idx on voice_generations (lang_code, created_at desc);
+
+-- Failure sidecar for archive-write failures (repair offline).
+create table if not exists voice_generations_failed (
+  id uuid primary key,
+  created_at timestamptz not null default now(),
+  stage text not null,                        -- 'audio_upload' | 'row_insert'
+  error text not null,
+  payload jsonb not null
+);
+
+-- Daily counters for observability + budget breaker (§10.2, §11).
+create table if not exists metrics_daily (
+  day date not null,
+  key text not null,
+  value bigint not null default 0,
+  primary key (day, key)
+);
+
+-- Atomic-increment RPC used by lib/archive.ts#incrMetric.
+create or replace function increment_metric_daily(p_day date, p_key text, p_value bigint)
+returns void
+language sql
+security definer
+as $$
+  insert into metrics_daily (day, key, value) values (p_day, p_key, p_value)
+  on conflict (day, key) do update set value = metrics_daily.value + excluded.value;
+$$;

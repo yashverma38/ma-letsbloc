@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { EVENTS, identifyByEmail, track } from '@/lib/mixpanel';
 
 export default function Landing() {
   const [clock, setClock] = useState('9:41');
@@ -38,13 +39,16 @@ export default function Landing() {
     }
     setLoading(true);
     try {
+      const cleanEmail = email.trim().toLowerCase();
       await addDoc(collection(db, 'waitlist_ma'), {
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         source: 'landing',
         createdAt: serverTimestamp(),
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
         referrer: typeof document !== 'undefined' ? document.referrer : '',
       });
+      identifyByEmail(cleanEmail, { source: 'landing_waitlist' });
+      track(EVENTS.SIGNUP_SUBMITTED, { source: 'landing' });
       const cur = Number(localStorage.getItem('ma_count_boost') || 0);
       localStorage.setItem('ma_count_boost', String(cur + 1));
       setDone(true);
