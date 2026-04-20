@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LANG_OPTIONS } from '@/lib/languages';
-import { EVENTS, identifyByEmail, track } from '@/lib/mixpanel';
+import { EVENTS, identifyByEmail, track, trackPageView } from '@/lib/mixpanel';
 
 const COMMON_APPS = ['Instagram', 'YouTube', 'WhatsApp', 'Reels', 'TikTok', 'Snapchat', 'X', 'Reddit', 'Chrome'];
 
@@ -20,6 +20,10 @@ export default function Manual() {
   const [lateNightApp, setLateNightApp] = useState('Instagram');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+
+  useEffect(() => {
+    trackPageView('cooked_manual');
+  }, []);
 
   async function go() {
     setErr('');

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import type { ScreenTimeData } from '@/lib/types';
-import { EVENTS, track } from '@/lib/mixpanel';
+import { EVENTS, track, trackPageView } from '@/lib/mixpanel';
 
 export default function AwareClient({ id, data }: { id: string; data: ScreenTimeData }) {
   const hoursPerDay = Math.round((data.totalHours / 7) * 10) / 10;
@@ -11,6 +11,7 @@ export default function AwareClient({ id, data }: { id: string; data: ScreenTime
   const yearDaysSaved = Math.round((yearHoursSaved / 24) * 10) / 10;
 
   useEffect(() => {
+    trackPageView('aware', { generation_id: id });
     track(EVENTS.AWARENESS_CARD_VIEWED, {
       generation_id: id,
       totalHours: data.totalHours,

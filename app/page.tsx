@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { EVENTS, identifyByEmail, track } from '@/lib/mixpanel';
+import { EVENTS, identifyByEmail, track, trackPageView } from '@/lib/mixpanel';
 
 export default function Landing() {
   const [clock, setClock] = useState('9:41');
@@ -28,6 +28,10 @@ export default function Landing() {
     const base = 847;
     const bumped = Number(typeof window !== 'undefined' ? localStorage.getItem('ma_count_boost') : 0) || 0;
     setCount(base + bumped);
+  }, []);
+
+  useEffect(() => {
+    trackPageView('landing');
   }, []);
 
   async function submit(e: React.FormEvent) {

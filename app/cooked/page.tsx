@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LANG_OPTIONS } from '@/lib/languages';
-import { EVENTS, identifyByEmail, track } from '@/lib/mixpanel';
+import { EVENTS, identifyByEmail, track, trackPageView } from '@/lib/mixpanel';
 
 type Slot = 'overview' | 'mostUsed' | 'pickups' | 'notifications';
 
@@ -50,6 +50,10 @@ export default function Upload() {
   const [langKey, setLangKey] = useState(`${LANG_OPTIONS[0].code}|${LANG_OPTIONS[0].label}`);
   const [step, setStep] = useState<'idle' | 'analyzing' | 'generating' | 'error'>('idle');
   const [err, setErr] = useState('');
+
+  useEffect(() => {
+    trackPageView('cooked_upload');
+  }, []);
 
   function pick(slot: Slot, f: File | null) {
     const isFirstForThisSlot = !files[slot];

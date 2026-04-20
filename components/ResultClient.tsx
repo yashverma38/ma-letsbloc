@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { Archetype, ScreenTimeData } from '@/lib/types';
-import { EVENTS, setProfile, track } from '@/lib/mixpanel';
+import { EVENTS, setProfile, track, trackPageView } from '@/lib/mixpanel';
 
 const FORWARDS = [
   'Bhai, Maa ne abhi call kiya. Tujhe bhi karegi. → ma.letsbloc.com',
@@ -36,6 +36,10 @@ export default function ResultClient({
   const forward = FORWARDS[Math.floor(Math.random() * FORWARDS.length)];
   const searchParams = useSearchParams();
   const isFresh = searchParams?.get('fresh') === '1';
+
+  useEffect(() => {
+    trackPageView('cooked_result', { generation_id: id, archetype, fresh: isFresh });
+  }, [id, archetype, isFresh]);
 
   useEffect(() => {
     if (!isFresh) return;

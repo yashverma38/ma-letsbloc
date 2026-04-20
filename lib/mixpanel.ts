@@ -18,8 +18,30 @@ export function initMixpanel() {
   });
   mixpanel.register({
     app: 'ma.letsbloc.com',
+    ...readUtmAndReferrer(),
   });
   initialized = true;
+}
+
+// UTM + referrer captured once at init, registered as super-props so every
+// downstream event carries attribution. Instagram story taps land with
+// referrer=instagram.com (mobile) or l.instagram.com (link shim).
+function readUtmAndReferrer(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  const out: Record<string, string> = {};
+  try {
+    const url = new URL(window.location.href);
+    for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']) {
+      const v = url.searchParams.get(k);
+      if (v) out[k] = v;
+    }
+    const ref = document.referrer;
+    if (ref) {
+      out.referrer = ref;
+      try { out.referrer_domain = new URL(ref).hostname; } catch {}
+    }
+  } catch {}
+  return out;
 }
 
 export function track(event: string, props: Record<string, unknown> = {}) {
@@ -61,9 +83,23 @@ export function incrementProfile(prop: string, by = 1) {
 
 // Canonical funnel event names — keep these stable for dashboards.
 export const EVENTS = {
+  PAGE_VIEWED: 'Page Viewed',
   SIGNUP_SUBMITTED: 'Signup Submitted',
   SCREENSHOT_UPLOADED: 'Screenshot Uploaded',
   VOICE_NOTE_GENERATED: 'Voice Note Generated',
   AWARENESS_CARD_VIEWED: 'Awareness Card Viewed',
   BLOC_REDIRECTED: 'Bloc Redirected',
 } as const;
+
+// Page-view tracker. Call once per page mount with a short, stable page name.
+// Attribution (utm_*, referrer) is already on every event as super-props.
+export function trackPageView(page: string, extra: Record<string, unknown> = {}) {
+  if (typeof window === 'undefined') return;
+  initMixpanel();
+  if (!initialized) return;
+  mixpanel.track(EVENTS.PAGE_VIEWED, {
+    page,
+    path: window.location.pathname,
+    ...extra,
+  });
+}
